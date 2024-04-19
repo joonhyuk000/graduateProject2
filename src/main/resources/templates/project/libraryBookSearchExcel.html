@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Book Search</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<h1>도서 검색</h1>
+<form id="searchForm">
+    <label for="keyword">검색어:</label>
+    <input type="text" id="keyword" required><br>
+    <label for="numOfRows">세션당 요청 레코드 수:</label>
+    <input type="number" id="numOfRows" required><br>
+    <label for="pageNo">페이지 수:</label>
+    <input type="number" id="pageNo" required><br>
+    <button type="submit">검색</button>
+</form>
+<table id="searchResults">
+    <thead>
+    <tr>
+        <th>제목</th>
+        <th>출판 연도</th>
+        <th>출판자</th>
+        <th>저자</th>
+        <th>URL</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    document.getElementById("searchForm").onsubmit = function(event) {
+        event.preventDefault(); // 기본 동작 방지
+
+        // 사용자로부터 입력 값을 가져옵니다.
+        var keyword = document.getElementById("keyword").value;
+        var numOfRows = document.getElementById("numOfRows").value;
+        var pageNo = document.getElementById("pageNo").value;
+
+        var xhr = new XMLHttpRequest();
+        var url = 'http://api.kcisa.kr/openapi/service/rest/convergence2017/conver7';
+        var serviceKey = '39394e18-90c8-41b6-a5e5-9d28f38e0a01'; // 여기에 서비스 키를 입력해주세요.
+        var queryParams = '?' + encodeURIComponent('serviceKey') + '=' + encodeURIComponent(serviceKey);
+        queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent(numOfRows);
+        queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent(pageNo);
+        queryParams += '&' + encodeURIComponent('keyword') + '=' + encodeURIComponent(keyword);
+
+        xhr.open('GET', url + queryParams);
+        xhr.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var responseXML = this.responseXML;
+                var searchResults = document.querySelector("#searchResults tbody");
+                searchResults.innerHTML = ""; // 결과를 초기화
+
+                // API 응답에서 항목들을 가져와서 화면에 표시합니다.
+                var items = responseXML.querySelectorAll('item');
+                items.forEach(function (item) {
+                    var row = document.createElement("tr");
+                    row.innerHTML =
+                        "<td>" + item.querySelector("title").textContent + "</td>" +
+                        "<td>" + item.querySelector("issuedDate").textContent + "</td>" +
+                        "<td>" + item.querySelector("publisher").textContent + "</td>" +
+                        "<td>" + item.querySelector("creator").textContent + "</td>" +
+                        "<td>" + item.querySelector("url").textContent + "</td>";
+
+                    searchResults.appendChild(row);
+                });
+            }
+        };
+        xhr.send('');
+    };
+</script>
+</body>
+</html>

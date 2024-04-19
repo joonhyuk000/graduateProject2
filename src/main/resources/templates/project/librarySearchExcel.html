@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="UTF-8">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Search</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<h1>학교 검색</h1>
+<form id="searchForm">
+    <label for="schoolName">학교명:</label>
+    <input type="text" id="schoolName" required><br>
+    <label for="numOfRows">세션당 요청 레코드 수:</label>
+    <input type="number" id="numOfRows" required><br>
+    <label for="pageNo">페이지 수:</label>
+    <input type="number" id="pageNo" required><br>
+    <label for="dist">인접 거리:</label>
+    <input type="text" id="dist" required><br>
+    <button type="submit">검색</button>
+</form>
+<table id="searchResults">
+    <thead>
+    <tr>
+        <th>시설명</th>
+        <th>대분류명</th>
+        <th>시설 도로명 주소</th>
+        <th>상세 설명</th>
+        <th>추가 설명</th>
+        <th>전화번호</th>
+        <th>공개 기관명</th>
+        <th>제공 기관명</th>
+        <th>데이터 표준일자</th>
+        <th>시설 위도</th>
+        <th>시설 경도</th>
+        <th>인접 거리</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    window.onload = function() {
+        var form = document.getElementById("searchForm");
+
+        form.onsubmit = function(event) {
+            event.preventDefault(); // 기본 동작 방지
+
+            // 사용자로부터 입력 값을 가져옵니다.
+            var schoolName = document.getElementById("schoolName").value;
+            var numOfRows = document.getElementById("numOfRows").value;
+            var pageNo = document.getElementById("pageNo").value;
+            var dist = document.getElementById("dist").value;
+
+            var xhr = new XMLHttpRequest();
+            var url = 'http://api.kcisa.kr/openapi/API_CNV_065/request';
+            var serviceKey = 'cee32eeb-b344-47a6-a343-8478a1af9880'; // 고정된 서비스 키
+            var queryParams = '?' + encodeURIComponent('serviceKey') + '=' + encodeURIComponent(serviceKey);
+            queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent(numOfRows);
+            queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent(pageNo);
+            queryParams += '&' + encodeURIComponent('schNm') + '=' + encodeURIComponent(schoolName);
+            queryParams += '&' + encodeURIComponent('dist') + '=' + encodeURIComponent(dist);
+
+            xhr.open('GET', url + queryParams);
+            xhr.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var responseXML = this.responseXML;
+                    var searchResults = document.querySelector("#searchResults tbody");
+                    searchResults.innerHTML = ""; // 결과를 초기화
+
+                    // API 응답에서 항목들을 가져와서 화면에 표시합니다.
+                    var items = responseXML.querySelectorAll('item');
+                    items.forEach(function (item) {
+                        var row = document.createElement("tr");
+                        row.innerHTML =
+                            "<td>" + item.querySelector("fcltyNm").textContent + "</td>" +
+                            "<td>" + item.querySelector("lclasNm").textContent + "</td>" +
+                            "<td>" + item.querySelector("fcltyRoadNmAddr").textContent + "</td>" +
+                            "<td>" + item.querySelector("description").textContent + "</td>" +
+                            "<td>" + item.querySelector("subDescription").textContent + "</td>" +
+                            "<td>" + item.querySelector("telNo").textContent + "</td>" +
+                            "<td>" + item.querySelector("openInstNm").textContent + "</td>" +
+                            "<td>" + item.querySelector("pvsnInstNm").textContent + "</td>" +
+                            "<td>" + item.querySelector("dataStdDate").textContent + "</td>" +
+                            "<td>" + item.querySelector("fcltyLatPos").textContent + "</td>" +
+                            "<td>" + item.querySelector("fcltyLotPos").textContent + "</td>" +
+                            "<td>" + item.querySelector("dist").textContent + "km" + "</td>";
+
+                        searchResults.appendChild(row);
+                    });
+                }
+            };
+            xhr.send('');
+        };
+    }
+</script>
+</body>
+</html>
